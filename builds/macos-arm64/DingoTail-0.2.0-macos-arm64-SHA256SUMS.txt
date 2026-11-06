@@ -1,0 +1,3 @@
+feacae2dea921aaaba863cafe31169bff2418532034d455cedabc5e66e0aeb9d  DingoTail-0.2.0-macos-arm64-corresponding-source.zip
+ec3942c1b4a55689c42587428a28a766d26c5a9c6950610c49671ec5dec46714  DingoTail-0.2.0-macos-arm64.dmg
+4bd50be1befa33e6e370cc97ced42d227c4604654f5ff487767e691f4f773f22  DingoTail-0.2.0-macos-arm64-brand-assets.zip

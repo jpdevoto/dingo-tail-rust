@@ -18,19 +18,19 @@ The Rust edition was continued to allow cross-platform support. The two editions
 
 ## Run the Windows release
 
-1. Open the [Windows x64 build folder](builds/windows-x64/) and download `dingotail.exe`.
+1. Open the [Windows x64 build folder](builds/windows-x64/) and download `DingoTail-0.2.0-windows-x64.exe`.
 2. Run the executable. The current release is unsigned; artwork and fonts are embedded, and no WebView runtime is required.
 
 From the repository root in PowerShell:
 
 ```powershell
-.\builds\windows-x64\dingotail.exe
+.\builds\windows-x64\DingoTail-0.2.0-windows-x64.exe
 ```
 
 The default rendering mode uses OpenGL on ordinary desktops and prefers DX12 in Windows RDP sessions. The application also accepts `--renderer auto`, `--renderer hardware`, `--renderer software`, and the Windows-only `--dx12` backend override. Explicit software rendering requires a compatible DX12 CPU adapter, normally Windows WARP:
 
 ```powershell
-.\builds\windows-x64\dingotail.exe --renderer software
+.\builds\windows-x64\DingoTail-0.2.0-windows-x64.exe --renderer software
 ```
 
 ### Available platforms
@@ -104,7 +104,7 @@ Passwords and passphrases are stored only when requested, using Windows Credenti
 | `src/` | Rust application modules and egui interface |
 | `assets/` | Embedded mascot, wordmark, icons, Material Icons font, and Windows resources |
 | `docs/screenshots/` | Authentic captures of the existing Windows release |
-| `builds/windows-x64/` | Existing Windows release executable |
+| `builds/` | Windows, Linux DEB/RPM, and macOS Intel/Apple Silicon binaries and checksums; see [build downloads](builds/README.md) |
 | `licenses/` | Third-party artwork and dependency notices |
 | `packaging/` | Linux desktop entry and RPM specification |
 | `tools/` | Native release packaging script |
