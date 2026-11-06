@@ -16,9 +16,21 @@ This edition is a spinoff of [DingoTail for Windows](https://github.com/jpdevoto
 
 The Rust edition was continued to allow cross-platform support. The two editions share the same purpose: making local and remote logs easy to follow. The regular DingoTail edition focuses on native Windows use, including VMs without GPU acceleration; this edition continues the Rust/egui implementation for Windows, Linux, and macOS.
 
+## Download v0.2.0
+
+| Platform | Direct download | Checksum |
+| --- | --- | --- |
+| Windows x64 | [Download .exe](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-windows-x64.exe) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-windows-x64-SHA256SUMS.txt) |
+| Linux x64 — Debian / Ubuntu | [Download .deb](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-linux-deb-x64.deb) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-linux-deb-x64-SHA256SUMS.txt) |
+| Linux x64 — RPM | [Download .rpm](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-linux-rpm-x64.rpm) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-linux-rpm-x64-SHA256SUMS.txt) |
+| macOS Intel | [Download .dmg](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-x64.dmg) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-x64-SHA256SUMS.txt) |
+| macOS Apple Silicon | [Download .dmg](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-arm64.dmg) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-arm64-SHA256SUMS.txt) |
+
+Linux and macOS packages have compiled successfully but have not been desktop-tested. Matching source archives and branding archives are available on the [v0.2.0 release page](https://github.com/jpdevoto/dingo-tail-rust/releases/tag/v0.2.0).
+
 ## Run the Windows release
 
-1. Open the [Windows x64 build folder](builds/windows-x64/) and download `DingoTail-0.2.0-windows-x64.exe`.
+1. Download [DingoTail-0.2.0-windows-x64.exe](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-windows-x64.exe).
 2. Run the executable. The current release is unsigned; artwork and fonts are embedded, and no WebView runtime is required.
 
 From the repository root in PowerShell:
