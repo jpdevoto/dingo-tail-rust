@@ -6,7 +6,7 @@ License: GPL-3.0-only
 URL: https://github.com/jpdevoto/dingo-tail
 ExclusiveArch: x86_64
 Requires: libX11, libXcursor, libXi, libXrandr, libxkbcommon, libxkbcommon-x11
-Requires: wayland-libs, mesa-libEGL, mesa-libGL, xdg-desktop-portal
+Requires: libwayland-client, libwayland-cursor, libwayland-egl, mesa-libEGL, mesa-libGL, xdg-desktop-portal
 Recommends: gnome-keyring
 Recommends: xdg-desktop-portal
 Recommends: xdg-desktop-portal-gtk
