@@ -1,0 +1,16 @@
+/target/
+/dist/
+/artifacts/
+/.capture/
+.env
+.env.*
+!.env.example
+*.log
+*.dmp
+*.pdb
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

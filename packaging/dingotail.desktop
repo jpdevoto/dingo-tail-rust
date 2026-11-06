@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=DingoTail
+Comment=Local and SSH log viewer
+Exec=dingotail
+Icon=dingotail
+Terminal=false
+Categories=Utility;System;
+StartupWMClass=dingotail

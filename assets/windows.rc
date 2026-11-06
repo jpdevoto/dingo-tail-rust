@@ -1,0 +1,25 @@
+1 ICON "assets/brand/dingotail.ico"
+1 VERSIONINFO
+ FILEVERSION 0,2,0,0
+ PRODUCTVERSION 0,2,0,0
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+BEGIN
+ BLOCK "StringFileInfo"
+ BEGIN
+  BLOCK "040904b0"
+  BEGIN
+   VALUE "FileDescription", "DingoTail - Local and SSH log viewer\0"
+   VALUE "LegalCopyright", "Copyright (C) 2026 Juan Pablo Devoto\0"
+   VALUE "ProductName", "DingoTail\0"
+   VALUE "InternalName", "dingotail\0"
+   VALUE "OriginalFilename", "dingotail.exe\0"
+   VALUE "FileVersion", "0.2.0\0"
+   VALUE "ProductVersion", "0.2.0\0"
+  END
+ END
+ BLOCK "VarFileInfo"
+ BEGIN
+  VALUE "Translation", 0x409, 1200
+ END
+END

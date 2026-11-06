@@ -1,0 +1,88 @@
+name: Build test packages
+# Prepared only: no workflow has been executed for the portability change.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2022
+            target: windows-x64
+            triple: x86_64-pc-windows-msvc
+            binary: dingotail.exe
+          - runner: macos-15-intel
+            target: macos-x64
+            triple: x86_64-apple-darwin
+            binary: dingotail
+          - runner: macos-15
+            target: macos-arm64
+            triple: aarch64-apple-darwin
+            binary: dingotail
+    runs-on: ${{ matrix.runner }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '13.0'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.98.1 --profile minimal --target ${{ matrix.triple }}
+      - name: Select Rust
+        run: rustup override set 1.98.1
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.triple }}
+      - name: Fetch corresponding-source dependencies
+        run: cargo fetch --locked
+      - name: Package
+        run: python tools/package_release.py --target ${{ matrix.target }} --binary target/${{ matrix.triple }}/release/${{ matrix.binary }} --output artifacts
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.target }}-UNVALIDATED
+          path: artifacts/*
+          if-no-files-found: error
+  linux:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ubuntu:22.04
+            target: linux-deb-x64
+          - image: rockylinux:9
+            target: linux-rpm-x64
+    container: ${{ matrix.image }}
+    steps:
+      - name: Debian build prerequisites
+        if: matrix.target == 'linux-deb-x64'
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl git build-essential pkg-config libdbus-1-dev dpkg-dev libx11-6 libxcursor1 libxi6 libxrandr2 libxkbcommon0 libwayland-client0 libegl1 libgl1
+      - name: RPM build prerequisites
+        if: matrix.target == 'linux-rpm-x64'
+        run: dnf install -y ca-certificates curl-minimal git gcc gcc-c++ make pkgconf-pkg-config dbus-devel rpm-build python3.11 libX11 libXcursor libXi libXrandr libxkbcommon wayland-libs mesa-libEGL mesa-libGL
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        if: matrix.target == 'linux-deb-x64'
+        with:
+          python-version: '3.11'
+      - name: Install pinned Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/dingotail-rustup.sh
+          sh /tmp/dingotail-rustup.sh -y --profile minimal --default-toolchain 1.98.1
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Build only (no Linux tests or desktop QA)
+        run: cargo build --release --locked --target x86_64-unknown-linux-gnu
+      - name: Fetch corresponding-source dependencies
+        run: cargo fetch --locked
+      - name: Package
+        run: python3.11 tools/package_release.py --target ${{ matrix.target }} --binary target/x86_64-unknown-linux-gnu/release/dingotail --output artifacts
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.target }}-UNVALIDATED
+          path: artifacts/*
+          if-no-files-found: error

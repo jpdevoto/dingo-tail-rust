@@ -1,0 +1,19 @@
+DingoTail third-party artwork resources
+
+Material Icons Outlined font and codepoint map
+Source: https://github.com/google/material-design-icons/tree/master/font
+Provider: Google
+License: Apache License 2.0 (Material-Icons-LICENSE.txt)
+Vendored: 2026-11-03; used locally with no runtime download.
+Font SHA-256: b63fa9edd75e3c20328e04ad31dcc38ce76411f3f9ea1a1ff87f49e5ba874b05
+
+DingoTail mascot and wordmark were generated from user-supplied DINGO artwork.
+Original reference images are excluded from this export; generation provenance
+is retained under assets/brand/provenance/.
+
+Rust dependencies: see DEPENDENCIES.json and DEPENDENCY-NOTICES.txt.
+This minimal export includes notices, but does not vendor upstream sources.
+The release packaging script produces a vendored corresponding-source ZIP.
+Dingo branding: rights holder Juan Pablo Devoto; see BRANDING.md.
+Project code: GPL-3.0-only; see LICENSE and COPYRIGHT.
+GPL text obtained from https://github.com/spdx/license-list-data/blob/main/text/GPL-3.0-only.txt (2026-11-03).
