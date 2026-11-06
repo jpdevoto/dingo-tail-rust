@@ -26,7 +26,7 @@ The Rust edition was continued to allow cross-platform support. The two editions
 | macOS Intel | [Download .dmg](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-x64.dmg) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-x64-SHA256SUMS.txt) |
 | macOS Apple Silicon | [Download .dmg](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-arm64.dmg) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-arm64-SHA256SUMS.txt) |
 
-Linux and macOS packages have compiled successfully but have not been desktop-tested. Matching source archives and branding archives are available on the [v0.2.0 release page](https://github.com/jpdevoto/dingo-tail-rust/releases/tag/v0.2.0).
+The Linux DEB and RPM builds have been tested successfully on Debian and Fedora 45, respectively. Only the macOS builds remain pending testing. Matching source archives and branding archives are available on the [v0.2.0 release page](https://github.com/jpdevoto/dingo-tail-rust/releases/tag/v0.2.0).
 
 ## Run the Windows release
 
@@ -50,8 +50,8 @@ The default rendering mode uses OpenGL on ordinary desktops and prefers DX12 in 
 | Platform | Availability and testing status |
 | --- | --- |
 | Windows x64 | Existing 0.2.0 release available. |
-| Linux x64 | Available as a source/build target with Debian and RPM packaging; not yet tested. Release binaries are available for download. |
-| macOS Intel / Apple Silicon | Available as source/build targets with application bundle packaging; not yet tested. Release binaries are available for download. |
+| Linux x64 | DEB tested successfully on Debian; RPM tested successfully on Fedora 45. Release binaries are available for download. |
+| macOS Intel / Apple Silicon | Intel and Apple Silicon builds are available for download; testing is still pending. |
 
 The project targets Windows 10/11, Ubuntu 22.04, Debian 12, RHEL-compatible 9, and macOS 13. These are target baselines, not a claim that every environment has been validated. See [platform requirements](PORTABILITY.md).
 
