@@ -652,12 +652,19 @@ impl App {
         self.reconnected.remove(&t.source.profile);
         let (tx, rx) = tokio::sync::oneshot::channel();
         if t.source.kind == SourceKind::LocalFile {
-            crate::local::start(&self.rt, t.source.clone(), t.view.clone(), rx);
+            crate::local::start(
+                &self.rt,
+                t.source.clone(),
+                t.view.clone(),
+                rx,
+                self.settings.initial_lines,
+            );
         } else if let Some(permit) = permit {
             permit.send(Request::Start {
                 source: t.source.clone(),
                 view: t.view.clone(),
                 cancel: rx,
+                initial_lines: self.settings.initial_lines,
             });
         }
         t.cancel = Some(tx);

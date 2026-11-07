@@ -63,7 +63,9 @@ Choose **Local computer → folder icon → Choose local files…**, or enter an
 
 *The Windows release follows a synthetic local application log with INFO, WARN, ERROR, and DEBUG highlighting. These documentation screenshots show the complete maximized application window using non-sensitive sample content.*
 
-Local files support UTF-8 and BOM-marked UTF-16 LE/BE. Readers load the last 200 complete lines, then poll every 250 ms. Rotation and truncation produce visible markers. Source files remain read-only.
+Local files support UTF-8 and BOM-marked UTF-16 LE/BE. Readers load the most recent complete lines and poll for new lines every 250 ms. Rotation and truncation produce visible markers. Source files remain read-only.
+
+In the 0.2.1 source, **Appearance > Initial lines to load** sets the starting history for local files, SSH files, and systemd journals. The default is 200 and the range is 1 to 20,000. Changes apply when a reader starts or restarts. Existing retention limits can reduce the number of lines kept.
 
 Choose **Add server** to configure an SSH host, port, username, and password or private key. Use the server's folder control to browse files over SFTP or open a systemd journal source; an empty unit selects the system journal. Verify the server's host key fingerprint against a trusted source when prompted.
 

@@ -35,6 +35,7 @@ pub(super) struct AppearanceDraft {
     pub text: [u8; 3],
     pub accent: [u8; 3],
     pub font: f32,
+    pub initial_lines: usize,
     pub rules: Vec<Rule>,
     pub error: String,
     id: String,
@@ -67,6 +68,7 @@ impl AppearanceDraft {
             text: settings.text,
             accent: settings.accent,
             font: settings.font,
+            initial_lines: settings.initial_lines,
             rules: settings.rules.clone(),
             error: String::new(),
             id: new_id(),
@@ -217,6 +219,11 @@ impl AppearanceDraft {
         next.text = self.text;
         next.accent = self.accent;
         next.font = self.font;
+        anyhow::ensure!(
+            (1..=MAX_INITIAL_LINES).contains(&self.initial_lines),
+            "Initial lines to load must be between 1 and 20,000"
+        );
+        next.initial_lines = self.initial_lines;
         next.rules = self.rules.clone();
         Ok(next)
     }
@@ -239,6 +246,13 @@ impl AppearanceDraft {
             });
             ui.add_space(12.);
             ui.add(egui::Slider::new(&mut self.font, 10.0..=24.0).text("Log font size"));
+            ui.add_space(12.);
+            ui.horizontal_wrapped(|ui| {
+                ui.label("Initial lines to load");
+                let response = ui.add(egui::DragValue::new(&mut self.initial_lines).range(1..=MAX_INITIAL_LINES).speed(100.));
+                name_widget(&response, egui::WidgetType::DragValue, "Initial lines to load");
+            });
+            ui.label("Applies when starting or restarting local files, SSH files and journals. Running readers keep their current value. Byte limits may retain fewer lines.");
             ui.add_space(16.);
             ui.label("Appearance preview");
             egui::Frame::new().fill(rgb(self.background)).inner_margin(12.).show(ui, |ui| {
@@ -250,7 +264,7 @@ impl AppearanceDraft {
             });
             ui.label(RichText::new("Accent preview").color(rgb(self.accent)));
             ui.add_space(8.);
-            ui.label("Preview only. Changes reach open logs when you apply and save.");
+            ui.label("Preview only. Appearance changes reach open logs when you apply and save.");
         });
     }
 

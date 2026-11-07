@@ -1,6 +1,12 @@
 // Copyright (C) 2026 Juan Pablo Devoto
 // SPDX-License-Identifier: GPL-3.0-only
 
+pub const DEFAULT_INITIAL_LINES: usize = 200;
+pub const MAX_INITIAL_LINES: usize = 20_000;
+pub fn normalize_initial_lines(value: usize) -> usize {
+    value.clamp(1, MAX_INITIAL_LINES)
+}
+
 pub const LEGACY_CREDENTIAL_SERVICE: &str = "SSHLogTail";
 use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, path::PathBuf};
@@ -162,6 +168,7 @@ pub struct Rule {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
+    pub initial_lines: usize,
     pub renderer: crate::rendering::RendererMode,
     pub version: u32,
     pub workspace: Workspace,
@@ -177,6 +184,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            initial_lines: DEFAULT_INITIAL_LINES,
             renderer: Default::default(),
             version: 2,
             workspace: Workspace::default(),
@@ -290,7 +298,13 @@ impl Settings {
             }
             v["version"] = 2.into();
         }
+        if let Some(value) = v.get("initial_lines").and_then(serde_json::Value::as_i64)
+            && value < 1
+        {
+            v["initial_lines"] = 1.into();
+        }
         let mut s: Self = serde_json::from_value(v)?;
+        s.initial_lines = normalize_initial_lines(s.initial_lines);
         let mut ids = std::collections::HashSet::new();
         anyhow::ensure!(
             s.profiles
@@ -344,7 +358,8 @@ pub fn quote(s: &str) -> anyhow::Result<String> {
     anyhow::ensure!(!s.contains('\0'), "NUL is not allowed");
     Ok(format!("'{}'", s.replace('\'', "'\"'\"'")))
 }
-pub fn command(s: &Source, cursor: Option<&str>) -> anyhow::Result<String> {
+pub fn command(s: &Source, cursor: Option<&str>, initial_lines: usize) -> anyhow::Result<String> {
+    let initial_lines = normalize_initial_lines(initial_lines);
     let prefix = if s.sudo { "sudo -n -- " } else { "" };
     anyhow::ensure!(
         s.kind != SourceKind::LocalFile,
@@ -356,7 +371,7 @@ pub fn command(s: &Source, cursor: Option<&str>) -> anyhow::Result<String> {
             if let Some(c) = cursor {
                 format!("--after-cursor={}", quote(c)?)
             } else {
-                "-n 200".into()
+                format!("-n {initial_lines}")
             },
             if s.path.is_empty() {
                 String::new()
@@ -366,7 +381,10 @@ pub fn command(s: &Source, cursor: Option<&str>) -> anyhow::Result<String> {
         ))
     } else {
         anyhow::ensure!(s.path.starts_with('/'), "Use an absolute remote file path");
-        Ok(format!("{prefix}tail -n 200 -F -- {}", quote(&s.path)?))
+        Ok(format!(
+            "{prefix}tail -n {initial_lines} -F -- {}",
+            quote(&s.path)?
+        ))
     }
 }
 pub fn compile(pattern: &str, regex: bool, case: bool) -> Result<regex::Regex, regex::Error> {
@@ -462,6 +480,61 @@ impl Decoder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn initial_lines_defaults_clamps_and_roundtrips() {
+        let mut value = serde_json::to_value(Settings::default()).unwrap();
+        value.as_object_mut().unwrap().remove("initial_lines");
+        assert_eq!(
+            Settings::parse(&serde_json::to_vec(&value).unwrap())
+                .unwrap()
+                .0
+                .initial_lines,
+            200
+        );
+        for (input, expected) in [
+            (-1_i64, 1),
+            (0, 1),
+            (1, 1),
+            (5000, 5000),
+            (20_000, 20_000),
+            (30_000, 20_000),
+        ] {
+            value["initial_lines"] = input.into();
+            let settings = Settings::parse(&serde_json::to_vec(&value).unwrap())
+                .unwrap()
+                .0;
+            assert_eq!(settings.initial_lines, expected);
+            assert_eq!(
+                Settings::parse(&serde_json::to_vec(&settings).unwrap())
+                    .unwrap()
+                    .0
+                    .initial_lines,
+                expected
+            );
+            assert_eq!(settings.version, 2);
+        }
+        let file = Source {
+            path: "/var/log/test file".into(),
+            ..Default::default()
+        };
+        assert_eq!(
+            command(&file, None, 5000).unwrap(),
+            "tail -n 5000 -F -- '/var/log/test file'"
+        );
+        assert!(
+            command(&file, None, usize::MAX)
+                .unwrap()
+                .contains("-n 20000")
+        );
+        let journal = Source {
+            kind: SourceKind::Journal,
+            ..Default::default()
+        };
+        assert!(command(&journal, None, 5000).unwrap().contains("-n 5000"));
+        let resumed = command(&journal, Some("cursor'value"), 5000).unwrap();
+        assert!(resumed.contains("--after-cursor="));
+        assert!(!resumed.contains("-n 5000"));
+    }
     #[test]
     fn repeated_atomic_save_and_failed_replacement() {
         let dir = std::env::temp_dir().join(format!("dingotail-save-{}", new_id()));
@@ -640,13 +713,13 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(
-            command(&source, None).unwrap(),
+            command(&source, None, DEFAULT_INITIAL_LINES).unwrap(),
             format!("tail -n 200 -F -- {}", quote(&source.path).unwrap())
         );
         source.kind = SourceKind::Journal;
         source.sudo = true;
         source.path = "app.service".into();
-        let cmd = command(&source, Some("cursor'quote")).unwrap();
+        let cmd = command(&source, Some("cursor'quote"), DEFAULT_INITIAL_LINES).unwrap();
         assert!(cmd.starts_with("sudo -n -- journalctl"));
         assert!(cmd.contains("--after-cursor='cursor'\"'\"'quote'"));
     }

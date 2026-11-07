@@ -1,7 +1,7 @@
 1 ICON "assets/brand/dingotail.ico"
 1 VERSIONINFO
- FILEVERSION 0,2,0,0
- PRODUCTVERSION 0,2,0,0
+ FILEVERSION 0,2,1,0
+ PRODUCTVERSION 0,2,1,0
  FILEOS 0x40004L
  FILETYPE 0x1L
 BEGIN
@@ -14,8 +14,8 @@ BEGIN
    VALUE "ProductName", "DingoTail\0"
    VALUE "InternalName", "dingotail\0"
    VALUE "OriginalFilename", "dingotail.exe\0"
-   VALUE "FileVersion", "0.2.0\0"
-   VALUE "ProductVersion", "0.2.0\0"
+   VALUE "FileVersion", "0.2.1\0"
+   VALUE "ProductVersion", "0.2.1\0"
   END
  END
  BLOCK "VarFileInfo"

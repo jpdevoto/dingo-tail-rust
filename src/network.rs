@@ -325,6 +325,7 @@ fn filter_summary((include, exclude, regex): &(String, String, bool)) -> String 
 }
 pub enum Request {
     Start {
+        initial_lines: usize,
         source: Source,
         view: Arc<Mutex<View>>,
         cancel: oneshot::Receiver<()>,
@@ -591,11 +592,30 @@ pub(crate) fn consume(
     }
     crate::rendering::request_log_repaint(&v.repaint);
 }
+// Apply backpressure by ingesting full batches before reading more SSH data.
+// Keep the queue bounded without discarding the requested initial history.
+fn queue_line(
+    view: &Arc<Mutex<View>>,
+    pending: &mut std::collections::VecDeque<String>,
+    bytes: &mut usize,
+    line: String,
+    journal: bool,
+    cursor: &mut Option<String>,
+) {
+    if !pending.is_empty() && (pending.len() >= 4000 || *bytes + line.len() > 4 * 1024 * 1024) {
+        consume(view, pending.drain(..).collect(), journal, cursor);
+        *bytes = 0;
+    }
+    *bytes += line.len();
+    pending.push_back(line);
+}
+
 async fn stream(
     shared: Arc<Shared>,
     source: Source,
     view: Arc<Mutex<View>>,
     mut cancel: oneshot::Receiver<()>,
+    initial_lines: usize,
 ) {
     view.lock().unwrap().set_status("Connecting stream");
     let mut cursor = None;
@@ -624,7 +644,7 @@ async fn stream(
                 continue;
             }
         };
-        let cmd = match command(&source, cursor.as_deref()) {
+        let cmd = match command(&source, cursor.as_deref(), initial_lines) {
             Ok(c) => c,
             Err(e) => {
                 let mut v = view.lock().unwrap();
@@ -646,7 +666,10 @@ async fn stream(
                 vec![if source.is_journal() {
                     "[Reconnected to journal]".into()
                 } else {
-                    "[Reconnected: recent 200 lines reloaded; gaps or duplicates may exist]".into()
+                    format!(
+                        "[Reconnected: recent {} lines reloaded; gaps or duplicates may exist]",
+                        normalize_initial_lines(initial_lines)
+                    )
                 }],
                 false,
                 &mut None,
@@ -655,15 +678,14 @@ async fn stream(
         let mut decoder = Decoder::default();
         let mut pending = std::collections::VecDeque::new();
         let mut bytes = 0usize;
-        let mut dropped = 0usize;
         let mut tick = tokio::time::interval(std::time::Duration::from_millis(100));
         let mut exited = false;
         loop {
             tokio::select! {
                 _=&mut cancel=>{let _=ch.close().await;view.lock().unwrap().set_status("Stopped");return},
-                _=tick.tick()=>{if !pending.is_empty(){let mut lines:Vec<String>=pending.drain(..).collect();bytes=0;if dropped>0{lines.insert(0,format!("[Dropped {dropped} queued lines under load]"));dropped=0;}consume(&view,lines,source.is_journal(),&mut cursor);}},
+                _=tick.tick()=>{if !pending.is_empty(){let lines:Vec<String>=pending.drain(..).collect();bytes=0;consume(&view,lines,source.is_journal(),&mut cursor);}},
                 msg=ch.wait()=>match msg {
-                    Some(russh::ChannelMsg::Data{data})=>{delay=1;for line in decoder.feed(&data){bytes+=line.len();pending.push_back(line);while bytes>4*1024*1024||pending.len()>4000{if let Some(l)=pending.pop_front(){bytes-=l.len();dropped+=1;}}}},
+                    Some(russh::ChannelMsg::Data{data})=>{delay=1;for line in decoder.feed(&data){queue_line(&view, &mut pending, &mut bytes, line, source.is_journal(), &mut cursor);}},
                     Some(russh::ChannelMsg::ExtendedData{data,..})=>{view.lock().unwrap().set_diagnostic(String::from_utf8_lossy(&data).into());},
                     Some(russh::ChannelMsg::ExitStatus{exit_status})=>{view.lock().unwrap().set_status(&format!("Exited ({exit_status})"));exited=true;break},
                     None=>break,
@@ -673,7 +695,14 @@ async fn stream(
         }
         let last = decoder.take();
         if !last.is_empty() {
-            pending.push_back(last)
+            queue_line(
+                &view,
+                &mut pending,
+                &mut bytes,
+                last,
+                source.is_journal(),
+                &mut cursor,
+            );
         }
         consume(
             &view,
@@ -737,8 +766,8 @@ pub fn connect(
                 }
                 request = rx.recv() => match request {
                     None | Some(Request::Stop) => break,
-                    Some(Request::Start { source, view, cancel }) => {
-                        workers.spawn(stream(shared.clone(), source, view, cancel));
+                    Some(Request::Start { source, view, cancel, initial_lines }) => {
+                        workers.spawn(stream(shared.clone(), source, view, cancel, initial_lines));
                     }
                     Some(Request::CancelBrowse) => { if let Some(task) = browser.take() { task.abort(); } }
                     Some(Request::Browse { request, path, sudo }) => {
@@ -1073,5 +1102,37 @@ mod sustained {
             start.elapsed()
         );
         assert!(start.elapsed().as_secs() < 660);
+    }
+}
+
+#[cfg(test)]
+mod initial_history_tests {
+    use super::*;
+    #[test]
+    fn large_bursts_preserve_history_and_journal_cursor_with_bounded_queue() {
+        for journal in [false, true] {
+            let view = Arc::new(Mutex::new(View::new(Default::default(), &[])));
+            let mut pending = std::collections::VecDeque::new();
+            let mut bytes = 0;
+            let mut cursor = None;
+            for i in 0..12000 {
+                let text = format!("{i}:{}", "x".repeat(if journal { 8 } else { 1000 }));
+                let line = if journal {
+                    serde_json::json!({"MESSAGE":text,"__CURSOR":i.to_string()}).to_string()
+                } else {
+                    text
+                };
+                queue_line(&view, &mut pending, &mut bytes, line, journal, &mut cursor);
+                assert!(pending.len() <= 4000);
+                assert!(bytes <= 4 * 1024 * 1024);
+            }
+            consume(&view, pending.into_iter().collect(), journal, &mut cursor);
+            let view = view.lock().unwrap();
+            assert_eq!(view.visible_len(), 12000);
+            for (i, line) in view.visible_lines().enumerate() {
+                assert!(line.text.contains(&format!("{i}:")));
+            }
+            assert_eq!(cursor, if journal { Some("11999".into()) } else { None });
+        }
     }
 }

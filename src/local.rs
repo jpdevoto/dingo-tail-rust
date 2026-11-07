@@ -140,7 +140,7 @@ fn identity(file: &File) -> std::io::Result<(u64, u64)> {
     let m = file.metadata()?;
     Ok((m.dev(), m.ino()))
 }
-fn initial(file: &mut File, tail: bool) -> std::io::Result<(TextDecoder, Vec<String>, u64)> {
+fn initial(file: &mut File, line_limit: usize) -> std::io::Result<(TextDecoder, Vec<String>, u64)> {
     let mut bom = [0u8; 3];
     file.seek(SeekFrom::Start(0))?;
     let n = file.read(&mut bom)?;
@@ -178,7 +178,9 @@ fn initial(file: &mut File, tail: bool) -> std::io::Result<(TextDecoder, Vec<Str
             }
             recent_bytes += line.len();
             recent.push_back(line);
-            while recent.len() > if tail { 200 } else { 20000 } || recent_bytes > 16 * 1024 * 1024 {
+            while recent.len() > normalize_initial_lines(line_limit)
+                || recent_bytes > 16 * 1024 * 1024
+            {
                 recent_bytes -= recent.pop_front().unwrap().len();
             }
         }
@@ -191,6 +193,7 @@ pub fn start(
     source: Source,
     view: Arc<Mutex<View>>,
     mut cancel: oneshot::Receiver<()>,
+    initial_lines: usize,
 ) -> tokio::task::JoinHandle<()> {
     rt.spawn_blocking(move || {
         let mut current: Option<(File, (u64, u64), TextDecoder, u64)> = None;
@@ -227,7 +230,14 @@ pub fn start(
                             &mut None,
                         );
                     }
-                    let (decoder, lines, offset) = initial(&mut candidate, first || interrupted)?;
+                    let (decoder, lines, offset) = initial(
+                        &mut candidate,
+                        if first || interrupted {
+                            initial_lines
+                        } else {
+                            MAX_INITIAL_LINES
+                        },
+                    )?;
                     consume(&view, lines, false, &mut None);
                     current = Some((candidate, id, decoder, offset));
                     first = false;
@@ -293,6 +303,117 @@ mod tests {
         }
     }
     #[test]
+    fn configurable_initial_history_encodings_and_limits() {
+        let dir = std::env::temp_dir().join(format!("dingotail-initial-{}", new_id()));
+        std::fs::create_dir(&dir).unwrap();
+        let text = (0..6000)
+            .map(|i| format!("row {i} café 😀\n"))
+            .collect::<String>();
+        for encoding in [Encoding::Utf8, Encoding::Le, Encoding::Be] {
+            let mut bytes = match encoding {
+                Encoding::Utf8 => vec![239, 187, 191],
+                Encoding::Le => vec![255, 254],
+                Encoding::Be => vec![254, 255],
+            };
+            if encoding == Encoding::Utf8 {
+                bytes.extend_from_slice(text.as_bytes());
+            } else {
+                for word in text.encode_utf16() {
+                    bytes.extend_from_slice(&if encoding == Encoding::Le {
+                        word.to_le_bytes()
+                    } else {
+                        word.to_be_bytes()
+                    });
+                }
+            }
+            let path = dir.join("history.log");
+            std::fs::write(&path, bytes).unwrap();
+            for requested in [1, 200, 5000, 20000] {
+                let (_, rows, _) =
+                    initial(&mut open(path.to_str().unwrap()).unwrap(), requested).unwrap();
+                let expected = requested.min(6000);
+                assert_eq!(rows.len(), expected);
+                assert_eq!(rows[0], format!("row {} café 😀", 6000 - expected));
+                assert_eq!(rows.last().unwrap(), "row 5999 café 😀");
+            }
+        }
+        std::fs::remove_file(dir.join("history.log")).unwrap();
+        std::fs::remove_dir(dir).unwrap();
+    }
+    #[test]
+    fn custom_initial_count_live_append_and_recovery() {
+        use std::io::Write;
+        let dir = std::env::temp_dir().join(format!("dingotail-recovery-{}", new_id()));
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("history.log");
+        std::fs::write(
+            &path,
+            (0..6000).map(|i| format!("old {i}\n")).collect::<String>(),
+        )
+        .unwrap();
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let v = view();
+        let (tx, rx) = oneshot::channel();
+        let task = start(
+            &rt,
+            Source {
+                path: path.to_str().unwrap().into(),
+                kind: SourceKind::LocalFile,
+                ..Default::default()
+            },
+            v.clone(),
+            rx,
+            5000,
+        );
+        until(|| v.lock().unwrap().visible_len() == 5000);
+        assert_eq!(v.lock().unwrap().visible_line(0).text, "old 1000");
+        {
+            let mut file = OpenOptions::new().append(true).open(&path).unwrap();
+            file.write_all(b"partial").unwrap();
+        }
+        std::thread::sleep(Duration::from_millis(300));
+        assert_eq!(v.lock().unwrap().visible_len(), 5000);
+        {
+            let mut file = OpenOptions::new().append(true).open(&path).unwrap();
+            file.write_all(b" done\n").unwrap();
+        }
+        until(|| {
+            v.lock()
+                .unwrap()
+                .visible_lines()
+                .any(|l| l.text == "partial done")
+        });
+        std::fs::rename(&path, dir.join("old.log")).unwrap();
+        until(|| v.lock().unwrap().status.starts_with("Waiting"));
+        std::fs::write(
+            &path,
+            (0..7000)
+                .map(|i| format!("recovered {i}\n"))
+                .collect::<String>(),
+        )
+        .unwrap();
+        until(|| {
+            v.lock()
+                .unwrap()
+                .visible_lines()
+                .any(|l| l.text == "recovered 6999")
+        });
+        {
+            let view = v.lock().unwrap();
+            let rows: Vec<_> = view
+                .visible_lines()
+                .filter(|l| l.text.starts_with("recovered "))
+                .collect();
+            assert_eq!(rows.len(), 5000);
+            assert_eq!(rows[0].text, "recovered 2000");
+        }
+        tx.send(()).unwrap();
+        rt.block_on(task).unwrap();
+        std::fs::remove_file(&path).unwrap();
+        std::fs::remove_file(dir.join("old.log")).unwrap();
+        std::fs::remove_dir(dir).unwrap();
+    }
+    #[test]
     fn file_lifecycle() {
         use std::io::Write;
         let dir = std::env::temp_dir().join(format!("sshlogtail-{}", new_id()));
@@ -315,6 +436,7 @@ mod tests {
             },
             v.clone(),
             rx,
+            DEFAULT_INITIAL_LINES,
         );
         until(|| v.lock().unwrap().visible_len() == 200);
         assert_eq!(v.lock().unwrap().visible_line(0).text, "line 100");
@@ -382,6 +504,7 @@ mod tests {
             },
             v.clone(),
             rx,
+            DEFAULT_INITIAL_LINES,
         );
         until(|| !v.lock().unwrap().diagnostic.is_empty());
         assert_eq!(v.lock().unwrap().status, "Waiting for local file");
@@ -408,7 +531,11 @@ mod tests {
                 });
             }
             std::fs::write(&path, bytes).unwrap();
-            let (_, lines, _) = initial(&mut open(path.to_str().unwrap()).unwrap(), true).unwrap();
+            let (_, lines, _) = initial(
+                &mut open(path.to_str().unwrap()).unwrap(),
+                DEFAULT_INITIAL_LINES,
+            )
+            .unwrap();
             assert_eq!(lines, vec!["hello 😀", "second"]);
             std::fs::remove_file(path).unwrap();
         }
