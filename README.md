@@ -16,41 +16,41 @@ This edition is a spinoff of [DingoTail for Windows](https://github.com/jpdevoto
 
 The Rust edition was continued to allow cross-platform support. The two editions share the same purpose: making local and remote logs easy to follow. The regular DingoTail edition focuses on native Windows use, including VMs without GPU acceleration; this edition continues the Rust/egui implementation for Windows, Linux, and macOS.
 
-## Download v0.2.0
+## Download v0.2.1
 
 | Platform | Direct download | Checksum |
 | --- | --- | --- |
-| Windows x64 | [Download .exe](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-windows-x64.exe) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-windows-x64-SHA256SUMS.txt) |
-| Linux x64 — Debian / Ubuntu | [Download .deb](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-linux-deb-x64.deb) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-linux-deb-x64-SHA256SUMS.txt) |
-| Linux x64 — RPM | [Download .rpm](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-linux-rpm-x64.rpm) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-linux-rpm-x64-SHA256SUMS.txt) |
-| macOS Intel | [Download .dmg](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-x64.dmg) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-x64-SHA256SUMS.txt) |
-| macOS Apple Silicon | [Download .dmg](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-arm64.dmg) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-macos-arm64-SHA256SUMS.txt) |
+| Windows x64 | [Download .exe](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-windows-x64.exe) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-windows-x64-SHA256SUMS.txt) |
+| Linux x64 — Debian / Ubuntu | [Download .deb](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-linux-deb-x64.deb) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-linux-deb-x64-SHA256SUMS.txt) |
+| Linux x64 — RPM | [Download .rpm](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-linux-rpm-x64.rpm) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-linux-rpm-x64-SHA256SUMS.txt) |
+| macOS Intel | [Download .dmg](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-macos-x64.dmg) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-macos-x64-SHA256SUMS.txt) |
+| macOS Apple Silicon | [Download .dmg](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-macos-arm64.dmg) | [SHA-256](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-macos-arm64-SHA256SUMS.txt) |
 
-The Linux DEB and RPM builds have been tested successfully on Debian and Fedora 45, respectively. Only the macOS builds remain pending testing. Matching source archives and branding archives are available on the [v0.2.0 release page](https://github.com/jpdevoto/dingo-tail-rust/releases/tag/v0.2.0).
+The v0.2.1 builds were tested successfully on Windows, Debian (DEB), and Fedora 45 (RPM). Testing is pending for macOS Intel and Apple Silicon. See the [changelog](CHANGELOG.md) for what changed. Matching source archives and branding archives are available on the [v0.2.1 release page](https://github.com/jpdevoto/dingo-tail-rust/releases/tag/v0.2.1).
 
 ## Run the Windows release
 
-1. Download [DingoTail-0.2.0-windows-x64.exe](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.0/DingoTail-0.2.0-windows-x64.exe).
+1. Download [DingoTail-0.2.1-windows-x64.exe](https://github.com/jpdevoto/dingo-tail-rust/releases/download/v0.2.1/DingoTail-0.2.1-windows-x64.exe).
 2. Run the executable. The current release is unsigned; artwork and fonts are embedded, and no WebView runtime is required.
 
 From the repository root in PowerShell:
 
 ```powershell
-.\builds\windows-x64\DingoTail-0.2.0-windows-x64.exe
+.\builds\windows-x64\DingoTail-0.2.1-windows-x64.exe
 ```
 
 The default rendering mode uses OpenGL on ordinary desktops and prefers DX12 in Windows RDP sessions. The application also accepts `--renderer auto`, `--renderer hardware`, `--renderer software`, and the Windows-only `--dx12` backend override. Explicit software rendering requires a compatible DX12 CPU adapter, normally Windows WARP:
 
 ```powershell
-.\builds\windows-x64\DingoTail-0.2.0-windows-x64.exe --renderer software
+.\builds\windows-x64\DingoTail-0.2.1-windows-x64.exe --renderer software
 ```
 
 ### Available platforms
 
 | Platform | Availability and testing status |
 | --- | --- |
-| Windows x64 | Existing 0.2.0 release available. |
-| Linux x64 | DEB tested successfully on Debian; RPM tested successfully on Fedora 45. Release binaries are available for download. |
+| Windows x64 | v0.2.1 tested successfully. |
+| Linux x64 | DEB tested on Debian. RPM tested on Fedora 45. |
 | macOS Intel / Apple Silicon | Intel and Apple Silicon builds are available for download; testing is still pending. |
 
 The project targets Windows 10/11, Ubuntu 22.04, Debian 12, RHEL-compatible 9, and macOS 13. These are target baselines, not a claim that every environment has been validated. See [platform requirements](PORTABILITY.md).
@@ -65,7 +65,7 @@ Choose **Local computer → folder icon → Choose local files…**, or enter an
 
 Local files support UTF-8 and BOM-marked UTF-16 LE/BE. Readers load the most recent complete lines and poll for new lines every 250 ms. Rotation and truncation produce visible markers. Source files remain read-only.
 
-In the 0.2.1 source, **Appearance > Initial lines to load** sets the starting history for local files, SSH files, and systemd journals. The default is 200 and the range is 1 to 20,000. Changes apply when a reader starts or restarts. Existing retention limits can reduce the number of lines kept.
+In v0.2.1, **Appearance > Initial lines to load** sets the starting history for local files, SSH files, and systemd journals. The default is 200 and the range is 1 to 20,000. Changes apply when a reader starts or restarts. Existing retention limits can reduce the number of lines kept.
 
 Choose **Add server** to configure an SSH host, port, username, and password or private key. Use the server's folder control to browse files over SFTP or open a systemd journal source; an empty unit selects the system journal. Verify the server's host key fingerprint against a trusted source when prompted.
 

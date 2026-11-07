@@ -1,0 +1,3 @@
+2135b06239986422d6cdc6ee40dec2dd1abf6e0bdba894ae43b730a5137f98ce  DingoTail-0.2.1-linux-rpm-x64-corresponding-source.zip
+abc9b877208342f64d4a1d48f728fe946827ba4323fef54eb2caaf7a3f1bd3a4  DingoTail-0.2.1-linux-rpm-x64.rpm
+eeeea05089fb5a6759c36ffdaf6b7e5ee17899609a9a7de393465c06661c7b44  DingoTail-0.2.1-linux-rpm-x64-brand-assets.zip

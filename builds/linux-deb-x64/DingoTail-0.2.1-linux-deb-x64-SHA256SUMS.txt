@@ -1,0 +1,3 @@
+33fdd2da26c1d04a0d96874d393fa9c6af32b233409e5c3b6feaeedc73c16c3c  DingoTail-0.2.1-linux-deb-x64-corresponding-source.zip
+e5c520729221ae4d7b74bb3b3c809176f07b4e265d67a5beef4db771005d49bf  DingoTail-0.2.1-linux-deb-x64.deb
+a6819840617a3e0b9282870b85137c91e9ff9f61f881afb8d8934ad65a18dcfb  DingoTail-0.2.1-linux-deb-x64-brand-assets.zip

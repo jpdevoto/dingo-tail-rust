@@ -1,0 +1,4 @@
+affead5d8c3627b7f0fdcda13353f6be606dac76ae56313efd532e2d3f418ec2  DingoTail-0.2.1-windows-x64-corresponding-source.zip
+3f23ccb337b975321187cc0435abbe5e308c86a24fddcc08bb33589e30135f50  DingoTail-0.2.1-windows-x64.zip
+26a29162f3e025149743ca81af68367dfaf88485030d4fff1fb0fc08300c6cd6  DingoTail-0.2.1-windows-x64-brand-assets.zip
+46dfa70b2bd3320cd026bcc5adb3a2cbcd72bc9bb6a8c66601aa9173572c26e2  DingoTail-0.2.1-windows-x64.exe
